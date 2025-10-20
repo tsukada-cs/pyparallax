@@ -35,6 +35,14 @@ Python library for parallax correction with Fortran extension
 ## Example usage
 Here is an example code to calculate parallax correction distance and perform parallax correction.
 First, define satellite position and create sample data:
+
+> [!NOTE]
+> This example script is also available as `examples/sample1.py`. This script correct the parallax onto the original lat/lon grid.
+
+> [!NOTE]
+> There is another example script at `examples/sample2.py`. This script correct the parallax onto a different projection grid (e.g., Azimuthal Equidistant projection around the cloud of interest).
+
+
 ```python
 #%%
 import pyproj
