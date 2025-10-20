@@ -165,18 +165,19 @@ for i, iax in enumerate(ax.flat):
     # Cloud location
     iax.scatter(cloud_lon, cloud_lat, marker="x", color="k", s=50, lw=0.8, zorder=2, transform=data_proj)
 
-    # Colorbar
-    p = iax.get_position()
-    cax = fig.add_axes([p.x0+0.05*p.width, p.y1-0.05*p.height, 0.5*p.width, 0.03*p.height])
-    fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
-    cax.tick_params(axis="x", direction="in")
-
     # Common settings
     iax.coastlines(linewidth=0.8, color="gold")
     iax.gridlines(draw_labels=["left","bottom"], linestyle=":")
     iax.set_title(title, loc="left")
     iax.tick_params(direction="in", top=True, right=True)
     iax.set(xlim=[cloud_lon-3, cloud_lon+3], ylim=[cloud_lat-3, cloud_lat+3])
+
+    # Colorbar
+    p = iax.get_position()
+    cax = fig.add_axes([p.x0+0.05*p.width, p.y1-0.05*p.height, 0.5*p.width, 0.03*p.height])
+    fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
+    cax.tick_params(axis="x", direction="in")
+
 
 # opath = "./fig_sample1_parallax_correction_result.png"
 # fig.savefig(opath, dpi=300, bbox_inches="tight", pad_inches=0.1)
