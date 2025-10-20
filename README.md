@@ -39,8 +39,6 @@ First, define satellite position and create sample data:
 #%%
 import pyproj
 import numpy as np
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 
 import pyparallax
 
@@ -51,45 +49,43 @@ satlat = 0.0
 
 # Create sample data grid
 dll = 0.1
-lon_1d = np.arange(satlon+20, satlon+40+dll, dll)
-lat_1d = np.arange(satlat+20, satlat+40+dll, dll)
-lons2d, lats2d = np.meshgrid(lon_1d, lat_1d)
+lon1d = np.arange(satlon+20, satlon+40+dll, dll)
+lat1d = np.arange(satlat+20, satlat+40+dll, dll)
+lon2d, lat2d = np.meshgrid(lon1d, lat1d)
 
 # Create sample exponential cloud data
 cloud_lon, cloud_lat = satlon+30, satlat+30 # +30 deg away from sub-satellite point
 cloud_r = 0.6 # in degree
-values_src = np.exp(-((lons2d-cloud_lon)**2 + (lats2d-cloud_lat)**2)/(2*(cloud_r**2))) * 1.0
+values_src = np.exp(-((lon2d-cloud_lon)**2 + (lat2d-cloud_lat)**2)/(2*(cloud_r**2))) * 1.0
 
 # Assign cloud top height (CTH) data
 echo_top_height = 16.0 # in km
 cth_src = values_src * echo_top_height
-
-# Define destination grid (same as source grid in this example)
-dst_x = lon_1d
-dst_y = lat_1d
 ```
 
 Then, calculate and plot parallax shift as follows:
 ```python
-# Calculate parallax shift
+#%% Calculate parallax shift
 lat_corr, lon_corr = pyparallax.calc_parallax_shift(
-    cth=cth_src, lat=lats2d, lon=lons2d,
+    cth=cth_src, lat=lat2d, lon=lon2d,
     satlat=satlat, satlon=satlon, ellps="WGS84"
 )
+# Plot
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
 
-#%% Plot
 geod = pyproj.Geod(ellps="WGS84")
-_, _, dist = geod.inv(lons2d, lats2d, lon_corr, lat_corr)
+_, _, dist = geod.inv(lon2d, lat2d, lon_corr, lat_corr)
 correction_dist_km = dist / 1000.0
 
 plot_proj = ccrs.PlateCarree()
 data_proj = ccrs.PlateCarree()
 fig, ax = plt.subplots(1, 2, figsize=(8.5,4.5), gridspec_kw={"wspace":0.3}, subplot_kw={"projection": plot_proj})
 
-ax[0].pcolormesh(lon_1d, lat_1d, cth_src, vmin=0, vmax=20, cmap="tab20b", transform=data_proj)
-ax[1].pcolormesh(lon_1d, lat_1d, correction_dist_km, vmin=0, vmax=20, cmap="tab20c_r", transform=data_proj)
+ax[0].pcolormesh(lon1d, lat1d, cth_src, vmin=0, vmax=20, cmap="tab20b", transform=data_proj)
+ax[1].pcolormesh(lon1d, lat1d, correction_dist_km, vmin=0, vmax=20, cmap="tab20c_r", transform=data_proj)
 slicer = (slice(None,None,5), slice(None,None,5))
-ax[1].quiver(lons2d[slicer], lats2d[slicer], (lon_corr-lons2d)[slicer], (lat_corr-lats2d)[slicer], scale=0.3, width=0.003, color="k", transform=data_proj)
+ax[1].quiver(lon2d[slicer], lat2d[slicer], (lon_corr-lon2d)[slicer], (lat_corr-lat2d)[slicer], scale=0.3, width=0.003, color="k", transform=data_proj)
 
 ax[0].set_title("Cloud Top Height (km)", loc="left")
 ax[1].set_title("Parallax Correction Distance (km)", loc="left")
@@ -122,7 +118,11 @@ proj = pyproj.Proj(
 )
 x_corr, y_corr = proj(lon_corr, lat_corr)
 
-# 2. Perform correction
+# 2. Define destination grid (same as source grid in this example)
+dst_x = lon1d
+dst_y = lat1d
+
+# 3. Perform correction
 values_corr, cth_corr = pyparallax.perform_correction(
     x_corr, y_corr, values_src, cth_src, dst_x, dst_y, as_xarray=True
 )
@@ -134,10 +134,10 @@ fig, ax = plt.subplots(3,2, figsize=(8,12), subplot_kw={"projection": plot_proj}
 for i, iax in enumerate(ax.flat):
     if i == 0:
         title = "(a) Original Values"
-        iax.pcolormesh(lon_1d, lat_1d, values_src, vmin=0, vmax=1, cmap="Set1_r", transform=data_proj)
+        iax.pcolormesh(lon1d, lat1d, values_src, vmin=0, vmax=1, cmap="Set1_r", transform=data_proj)
     if i == 1:
         title = "(b) Original CTH (km)"
-        iax.pcolormesh(lon_1d, lat_1d, cth_src, vmin=0, vmax=20, cmap="tab20b", transform=data_proj)
+        iax.pcolormesh(lon1d, lat1d, cth_src, vmin=0, vmax=20, cmap="tab20b", transform=data_proj)
     if i == 2:
         title = "(c) Corrected Values"
         iax.pcolormesh(dst_x, dst_y, values_corr, vmin=0, vmax=1, cmap="Set1_r", transform=data_proj)
@@ -152,7 +152,7 @@ for i, iax in enumerate(ax.flat):
         iax.pcolormesh(dst_x, dst_y, cth_corr-cth_src, cmap="RdBu_r", transform=data_proj)
 
     # Cloud location
-    iax.scatter(cloud_lon, cloud_lat, marker="x", color="k", s=50, lw=0.8, transform=data_proj)
+    iax.scatter(cloud_lon, cloud_lat, marker="x", color="k", s=50, lw=0.8, zorder=2, transform=data_proj)
 
     # Colorbar
     p = iax.get_position()
