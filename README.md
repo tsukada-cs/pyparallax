@@ -44,18 +44,20 @@ import pyparallax
 
 
 # Define satellite position
-satlon = 100.0
+satlon = 140.7
 satlat = 0.0
+
+# Create sample exponential cloud data
+cloud_lon = satlon-4 # deg away from sub-satellite point
+cloud_lat = satlat+36 # deg away from sub-satellite point
+cloud_r = 0.6 # in degree
 
 # Create sample data grid
 dll = 0.1
-lon1d = np.arange(satlon+20, satlon+40+dll, dll)
-lat1d = np.arange(satlat+20, satlat+40+dll, dll)
+lon1d = np.arange(cloud_lon-20, cloud_lon+20+dll, dll)
+lat1d = np.arange(cloud_lat-20, cloud_lat+20+dll, dll)
 lon2d, lat2d = np.meshgrid(lon1d, lat1d)
 
-# Create sample exponential cloud data
-cloud_lon, cloud_lat = satlon+30, satlat+30 # +30 deg away from sub-satellite point
-cloud_r = 0.6 # in degree
 values_src = np.exp(-((lon2d-cloud_lon)**2 + (lat2d-cloud_lat)**2)/(2*(cloud_r**2))) * 1.0
 
 # Assign cloud top height (CTH) data
@@ -70,6 +72,7 @@ lat_corr, lon_corr = pyparallax.calc_parallax_shift(
     cth=cth_src, lat=lat2d, lon=lon2d,
     satlat=satlat, satlon=satlon, ellps="WGS84"
 )
+
 # Plot
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -97,7 +100,7 @@ for i, iax in enumerate(ax.flat):
     
     # Colorbar
     p = iax.get_position()
-    cax = fig.add_axes([p.x0+0.05*p.width, p.y0+0.1*p.height, 0.5*p.width, 0.03*p.height])
+    cax = fig.add_axes([p.x0+0.05*p.width, p.y1-0.05*p.height, 0.5*p.width, 0.03*p.height])
     fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
     cax.tick_params(axis="x", direction="in")
     cax.xaxis.set_major_locator(plt.MultipleLocator(4))
@@ -156,7 +159,7 @@ for i, iax in enumerate(ax.flat):
 
     # Colorbar
     p = iax.get_position()
-    cax = fig.add_axes([p.x0+0.05*p.width, p.y0+0.1*p.height, 0.5*p.width, 0.03*p.height])
+    cax = fig.add_axes([p.x0+0.05*p.width, p.y1-0.05*p.height, 0.5*p.width, 0.03*p.height])
     fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
     cax.tick_params(axis="x", direction="in")
 

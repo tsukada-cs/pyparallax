@@ -6,18 +6,20 @@ import pyparallax
 
 
 # Define satellite position
-satlon = 100.0
+satlon = 140.7
 satlat = 0.0
+
+# Create sample exponential cloud data
+cloud_lon = satlon-4 # deg away from sub-satellite point
+cloud_lat = satlat+36 # deg away from sub-satellite point
+cloud_r = 0.6 # in degree
 
 # Create sample data grid
 dll = 0.1
-lon1d = np.arange(satlon+20, satlon+40+dll, dll)
-lat1d = np.arange(satlat+20, satlat+40+dll, dll)
+lon1d = np.arange(cloud_lon-20, cloud_lon+20+dll, dll)
+lat1d = np.arange(cloud_lat-20, cloud_lat+20+dll, dll)
 lon2d, lat2d = np.meshgrid(lon1d, lat1d)
 
-# Create sample exponential cloud data
-cloud_lon, cloud_lat = satlon+30, satlat+30 # +30 deg away from sub-satellite point
-cloud_r = 0.6 # in degree
 values_src = np.exp(-((lon2d-cloud_lon)**2 + (lat2d-cloud_lat)**2)/(2*(cloud_r**2))) * 1.0
 
 # Assign cloud top height (CTH) data
@@ -57,13 +59,13 @@ for i, iax in enumerate(ax.flat):
     
     # Colorbar
     p = iax.get_position()
-    cax = fig.add_axes([p.x0+0.05*p.width, p.y0+0.1*p.height, 0.5*p.width, 0.03*p.height])
+    cax = fig.add_axes([p.x0+0.05*p.width, p.y1-0.05*p.height, 0.5*p.width, 0.03*p.height])
     fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
     cax.tick_params(axis="x", direction="in")
     cax.xaxis.set_major_locator(plt.MultipleLocator(4))
 
-# opath = "./fig_sample1_parallax_correction_distance.png"
-# fig.savefig(opath, dpi=300, bbox_inches="tight", pad_inches=0.1)
+opath = "./fig_sample1_parallax_correction_distance.png"
+fig.savefig(opath, dpi=300, bbox_inches="tight", pad_inches=0.1)
 plt.show()
 #%% Correction
 # 1. Convert to projection coordinate (in this `latlon` coordinates, its just returning the same lon/lat as x/y)
@@ -108,12 +110,6 @@ for i, iax in enumerate(ax.flat):
     # Cloud location
     iax.scatter(cloud_lon, cloud_lat, marker="x", color="k", s=50, lw=0.8, zorder=2, transform=data_proj)
 
-    # Colorbar
-    p = iax.get_position()
-    cax = fig.add_axes([p.x0+0.05*p.width, p.y0+0.1*p.height, 0.5*p.width, 0.03*p.height])
-    fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
-    cax.tick_params(axis="x", direction="in")
-
     # Common settings
     iax.coastlines(linewidth=0.8, color="gold")
     iax.gridlines(draw_labels=["left","bottom"], linestyle=":")
@@ -121,7 +117,14 @@ for i, iax in enumerate(ax.flat):
     iax.tick_params(direction="in", top=True, right=True)
     iax.set(xlim=[cloud_lon-3, cloud_lon+3], ylim=[cloud_lat-3, cloud_lat+3])
 
-# opath = "./fig_sample1_parallax_correction_result.png"
-# fig.savefig(opath, dpi=300, bbox_inches="tight", pad_inches=0.1)
+    # Colorbar
+    p = iax.get_position()
+    cax = fig.add_axes([p.x0+0.05*p.width, p.y1-0.05*p.height, 0.5*p.width, 0.03*p.height])
+    fig.colorbar(iax.collections[0], cax=cax, orientation="horizontal")
+    cax.tick_params(axis="x", direction="in")
+
+
+opath = "./fig_sample1_parallax_correction_result.png"
+fig.savefig(opath, dpi=300, bbox_inches="tight", pad_inches=0.1)
 plt.show()
 # %%
