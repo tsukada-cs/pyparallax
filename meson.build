@@ -69,6 +69,7 @@ py3.install_sources([
     'src/pyparallax/__init__.py',
     'src/pyparallax/parallax.py',
     'src/pyparallax/interp.py',
+    'src/pyparallax/utils.py',
   ],
   pure: false,
   subdir: 'pyparallax')

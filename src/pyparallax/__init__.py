@@ -8,3 +8,4 @@ This library provides tools to correct parallax effects in satellite imagery wit
 from pyparallax.parallax import *
 from pyparallax import interp
 from pyparallax import futils
+from pyparallax import utils
