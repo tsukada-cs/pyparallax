@@ -56,7 +56,7 @@ def match_temperature_height(temp, reftemp, heights, prefer="lower", xname="x", 
     diff1 = (t1 - temp).assign_coords({zname: diff0[zname]})
 
     # Detect intersections
-    sign_change = (diff0 * diff1 < 0)
+    sign_change = (diff0 * diff1 <= 0)
 
     # Linear interpolation factor
     with np.errstate(invalid='ignore', divide='ignore'):
