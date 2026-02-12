@@ -1,3 +1,8 @@
+!-----------------------------------
+! Author: Satoki Tsujino
+! Date: 2020/06/06
+! Modification: Taiga Tsukada (2025/04/14)
+!-----------------------------------
 subroutine tri_interp2d(src_x, src_y, src_v, src_priority, dst_x, dst_y, undef, dst_v, dst_priority)
    ! Accelerated triangle interpolation subroutine (main part)
    ! [Note] dst_x, dst_y must be equally spaced
