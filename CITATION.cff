@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "pyparallax: Python library for parallax correction with Fortran extension"
+version: 0.1.0
+date-released: 2025-02-15
+url: "https://github.com/tsukada-cs/pyparallax"
+repository-code: "https://github.com/tsukada-cs/pyparallax"
+license: GPL-3.0
+authors:
+  - family-names: "Tsukada"
+    given-names: "Taiga"
+    orcid: "https://orcid.org/0000-0003-2036-308X"
+    affiliation: "Cooperative Institute for Research in the Atmosphere (CIRA), Colorado State University"
+  - family-names: "Tsujino"
+    given-names: "Satoki"
+    orcid: "https://orcid.org/0000-0002-1489-1735"
+    affiliation: "Meteorological Research Institute, Japan Meteorological Agency"
+  - family-names: "Horinouchi"
+    given-names: "Takeshi"
+    orcid: "https://orcid.org/0000-0002-2296-1975"
+    affiliation: "Faculty of Environmental Earth Science, Hokkaido University"
+keywords:
+  - parallax correction
+  - satellite imagery
+  - remote sensing
+  - atmospheric science
+  - cloud top height
+  - geospatial processing
+abstract: >
+  pyparallax is a Python library for performing parallax correction 
+  on satellite imagery, particularly useful for correcting the apparent 
+  displacement of clouds and other elevated features in meteorological 
+  satellite observations. The library includes optimized Fortran 
+  extensions for computational efficiency.
