@@ -4,7 +4,17 @@ import numpy as np
 from pyparallax import interp
 
 
-def correction(src_lon, src_lat, src_val, cth, satlon, satlat=0.0, satheight=42164.0, proj=None, dst_x=None, dst_y=None, dst_is_lonlat=True, undef=-99999999.0, return_latlon_corr=False):
+def geodetic_to_geocentric_lat(lat, radius_eq=6378.1370, radius_pole=6356.7523):
+    """Convert geodetic latitude to geocentric latitude (degrees)."""
+    return np.rad2deg(np.arctan((radius_pole/radius_eq)**2 * np.tan(np.deg2rad(lat))))
+
+
+def geocentric_to_geodetic_lat(lat, radius_eq=6378.1370, radius_pole=6356.7523):
+    """Convert geocentric latitude to geodetic latitude (degrees)."""
+    return np.rad2deg(np.arctan((radius_eq/radius_pole)**2 * np.tan(np.deg2rad(lat))))
+
+
+def correction(src_lon, src_lat, src_val, cth, satlon, satlat=0.0, satheight=42164.0, proj=None, dst_x=None, dst_y=None, dst_is_lonlat=True, undef=-99999999.0, return_latlon_corr=False, lat_is_geodetic=True):
     """
     Performs parallax correction to variables observed from the satellite.
     Forward mapping is done on the map projection surface (i.e., x-y plane).
@@ -40,6 +50,8 @@ def correction(src_lon, src_lat, src_val, cth, satlon, satlat=0.0, satheight=421
         If False, `dst_x` and `dst_y` are interpreted as `x` and `y` in the projection. 
     undef: float
         Undefined value used in Fortran module.
+    lat_is_geodetic : bool, default True
+        Whether `src_lat` is geodetic latitude. See `calc_parallax_shift`.
     """
     if src_lon.shape != src_lat.shape != src_val.shape != cth.shape:
         raise ValueError("`src_lon`, `src_lat`, `src_val`, and `cth` must have same shape")
@@ -58,7 +70,8 @@ def correction(src_lon, src_lat, src_val, cth, satlon, satlat=0.0, satheight=421
     # shifting pixels according to parallax corretion
     lat_corr, lon_corr = calc_parallax_shift(
         cth=cth, lat=src_lat, lon=src_lon, satheight=satheight,
-        satlat=satlat, satlon=satlon, radius_eq=r_a*1e-3, radius_pole=r_b*1e-3)
+        satlat=satlat, satlon=satlon, radius_eq=r_a*1e-3, radius_pole=r_b*1e-3,
+        lat_is_geodetic=lat_is_geodetic)
 
     if return_latlon_corr:
         return lon_corr, lat_corr
@@ -94,7 +107,7 @@ def perform_correction(x_corr, y_corr, src_val, cth, dst_x, dst_y, undef=-999999
     ovalues, octh = interp.tri_interp2d(x_corr, y_corr, src_val, cth, dst_x, dst_y, undef, as_xarray=as_xarray)
     return ovalues, octh
 
-def calc_parallax_shift(cth, lat, lon, satheight=42164.0, satlat=0.0, satlon=140.7, radius_eq=6378.1370, radius_pole=6356.7523, ellps=None):
+def calc_parallax_shift(cth, lat, lon, satheight=42164.0, satlat=0.0, satlon=140.7, radius_eq=6378.1370, radius_pole=6356.7523, ellps=None, lat_is_geodetic=True):
     """
     Calcurate parallax of clouds observed by satellites.
 
@@ -118,6 +131,12 @@ def calc_parallax_shift(cth, lat, lon, satheight=42164.0, satlat=0.0, satlon=140
         Radius of semi-minor axis, default: WGS84's length 6356.7523
     ellps : str
         Geodetic parameters for specifying the ellipsoid
+    lat_is_geodetic : bool, default True
+        If True, `lat` is interpreted as geodetic latitude and `lat_corr` is
+        returned as geodetic latitude. This is the convention used by map
+        projections and by satellite geolocation products, so it is the default.
+        If False, `lat` and `lat_corr` are geocentric latitude, which was the
+        behaviour of versions before this option was added.
 
     Returns
     -------
@@ -129,6 +148,16 @@ def calc_parallax_shift(cth, lat, lon, satheight=42164.0, satlat=0.0, satlon=140
     Notes
     -----
     If both 'ellps' and 'radius_eq(pole)' are specified, 'ellps' has priority.
+
+    `satlat` is a geocentric latitude, because `satheight` is measured from the
+    centre of the Earth. For a geostationary satellite `satlat` is 0, where the
+    two conventions coincide. Passing per-pixel arrays for `satheight`,
+    `satlat` and `satlon` is supported, which allows this function to be used
+    for cross-track scanning instruments on low Earth orbit as well.
+
+    Mixing up the two latitude conventions displaces the result by
+    a*f*sin(2*lat) at most (about 1.7 km at 11 deg, 10 km at 45 deg), which is
+    why `lat_is_geodetic` defaults to the geodetic convention.
     """
     # Argument checks
     if ellps is not None:
@@ -149,6 +178,11 @@ def calc_parallax_shift(cth, lat, lon, satheight=42164.0, satlat=0.0, satlon=140
 
     if cth.shape != lat.shape or cth.shape != lon.shape:
         raise ValueError("cth and lat and lon must have same shape")
+
+    # The Cartesian formulae below use geocentric latitude, so convert first
+    # and convert the result back at the end.
+    if lat_is_geodetic:
+        lat = geodetic_to_geocentric_lat(lat, radius_eq, radius_pole)
 
     # degrees to radians
     satlat = np.deg2rad(satlat)
@@ -199,4 +233,7 @@ def calc_parallax_shift(cth, lat, lon, satheight=42164.0, satlat=0.0, satlon=140
     lon_corr = np.rad2deg(np.arctan2(x_A, z_A))
     on_nadir_lon = (xcorr==0)
     lon_corr[on_nadir_lon] = lon[on_nadir_lon]
+
+    if lat_is_geodetic:
+        lat_corr = geocentric_to_geodetic_lat(lat_corr, radius_eq, radius_pole)
     return lat_corr, lon_corr

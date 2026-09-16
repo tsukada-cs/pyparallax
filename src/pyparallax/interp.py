@@ -38,7 +38,7 @@ def tri_interp2d(src_x, src_y, src_v, src_priority, dst_x, dst_y, undef=-999.0, 
     ----
     `dst_x`, `dst_y` must be equally spaced
     """
-    invalid_index = (src_v==np.nan) + (src_priority==np.nan)
+    invalid_index = np.isnan(src_v) | np.isnan(src_priority)
     src_v = np.where(invalid_index, undef, src_v)
     src_priority = np.where(invalid_index, undef, src_priority)
 

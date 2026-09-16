@@ -32,6 +32,27 @@ Python library for parallax correction with Fortran extension
     python -c "import pyparallax; print(pyparallax.__doc__)"
     ```
 
+## Latitude convention
+
+`lat` / `src_lat` are **geodetic** latitude (the convention of map projections
+and of satellite geolocation products), and the corrected latitude is returned
+in the same convention. The internal formulae work in geocentric latitude and
+the conversion is done for you.
+
+Pass `lat_is_geodetic=False` to get the pre-v0.2 behaviour, in which `lat` was
+interpreted, and returned, as geocentric latitude. That convention displaces the
+result by up to ~2.4 km at 60 deg for a geostationary satellite, and by 1-2.5 km
+at all latitudes once the satellite is off the equator.
+
+> [!NOTE]
+> `satlat` is a **geocentric** latitude, because `satheight` is measured from
+> the centre of the Earth. For a geostationary satellite `satlat` is 0, where
+> the two conventions coincide.
+
+`satheight`, `satlat` and `satlon` also accept per-pixel arrays, which lets the
+same function be used for cross-track scanning instruments on low Earth orbit
+(the satellite moves between scan lines).
+
 ## Example usage
 Here is an example code to calculate parallax correction distance and perform parallax correction.
 First, define satellite position and create sample data:
